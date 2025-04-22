@@ -1,1 +1,88 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Song Request</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 500px; margin: auto; }
+    label, input, textarea, button { display: block; width: 100%; margin-bottom: 1rem; }
+    button { padding: 0.75rem; background: black; color: white; border: none; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Make a Song Request</h1>
+  <form id="requestForm">
+    <label>Song + Artist</label>
+    <input type="text" name="song" required />
+
+    <label>Your Name</label>
+    <input type="text" name="name" />
+
+    <label>Dedication (optional)</label>
+    <textarea name="dedication"></textarea>
+
+    <label>Tip Amount (optional)</label>
+    <input type="number" name="tip" step="0.01" />
+
+    <button type="submit">Send Request</button>
+  </form>
+
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzQRWn5u9PvqoaR0mN-Wfhdmr-pEL8Sgw",
+      authDomain: "universal-piano-bar.firebaseapp.com",
+      projectId: "universal-piano-bar",
+      storageBucket: "universal-piano-bar.appspot.com",
+      messagingSenderId: "755078998466",
+      appId: "1:755078998466:web:95ffb7794c05d0276a4e5b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Get performer ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const performerId = urlParams.get('performer');
+
+    if (!performerId) {
+      alert("No performer ID found in URL.");
+      throw new Error("Missing performer ID");
+    }
+
+    // Handle form submission
+    const form = document.getElementById('requestForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const song = formData.get('song');
+      const name = formData.get('name');
+      const dedication = formData.get('dedication');
+      const tip = parseFloat(formData.get('tip')) || 0;
+
+      try {
+        await addDoc(collection(db, "requests", performerId, "submissions"), {
+          song,
+          name,
+          dedication,
+          tip,
+          createdAt: new Date()
+        });
+
+        alert("Request submitted!");
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to submit request.");
+      }
+    });
+  </script>
+</body>
+</html>
 
